@@ -20,24 +20,13 @@ interface ChatAreaProps {
   onMenuClick?: () => void;
 }
 
-// Use window location in production if NEXT_PUBLIC_API_URL not set
-const getApiUrl = () => {
-  if (process.env.NEXT_PUBLIC_API_URL) {
-    return `${process.env.NEXT_PUBLIC_API_URL}/api`;
-  }
-  // In browser, check if we're on localhost
-  if (typeof window !== "undefined") {
-    const isLocalhost = window.location.hostname === "localhost";
-    if (!isLocalhost) {
-      // Production: assume API is at same domain with /api or use Railway pattern
-      // You can also hardcode your Railway API URL here as fallback
-      return `${window.location.protocol}//${window.location.hostname.replace("web", "api")}/api`;
-    }
-  }
-  return "http://localhost:4000/api";
-};
-
-const API_URL = getApiUrl();
+// Railway API URL (production) or localhost (development)
+const API_URL =
+  process.env.NEXT_PUBLIC_API_URL
+    ? `${process.env.NEXT_PUBLIC_API_URL}/api`
+    : typeof window !== "undefined" && window.location.hostname !== "localhost"
+      ? "https://api-production-67bb.up.railway.app/api"
+      : "http://localhost:4000/api";
 
 export function ChatArea({
   session,
