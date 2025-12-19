@@ -170,15 +170,31 @@ docker-compose up --build
 
 [Railway](https://railway.app) supports monorepos and provides free Redis.
 
-1. Create a Railway account
-2. Create a new project from GitHub repo
-3. Add services:
+1. Create a Railway account and new project from GitHub repo
+2. Add services:
    - **Redis**: Add from Railway's template
-   - **API**: Point to `apps/api/Dockerfile`
-   - **Worker**: Point to `apps/api/Dockerfile.worker`
+   - **API**: Point to `apps/api/Dockerfile` (runs both API server and worker)
    - **Web**: Point to `apps/web/Dockerfile`
-4. Set environment variables in each service
-5. Railway auto-deploys on git push
+
+3. Set environment variables:
+
+   **API Service:**
+   ```
+   DATABASE_URL=postgresql://...  (your Neon URL)
+   REDIS_URL=${{Redis.REDIS_URL}}  (Railway variable reference)
+   OPENROUTER_API_KEY=sk-or-...
+   OPENROUTER_MODEL=openai/gpt-3.5-turbo
+   ```
+
+   **Web Service (Build Args):**
+   ```
+   NEXT_PUBLIC_API_URL=https://[your-api-service].up.railway.app
+   ```
+   
+   > **Important:** `NEXT_PUBLIC_API_URL` must be set as a Docker build argument in Railway:
+   > Go to Web service → Settings → Build → Add build argument: `NEXT_PUBLIC_API_URL`
+
+4. Deploy! Railway auto-deploys on git push
 
 #### Option 2: Render
 
@@ -246,11 +262,13 @@ server {
 | Variable | Description |
 |----------|-------------|
 | `DATABASE_URL` | PostgreSQL connection string (Neon) |
-| `REDIS_HOST` | Redis host (`redis` for docker-compose) |
+| `REDIS_URL` | Full Redis URL (for Railway: `redis://default:pass@host:port`) |
+| `REDIS_HOST` | Redis host (alternative to REDIS_URL) |
 | `REDIS_PORT` | Redis port (default: 6379) |
+| `REDIS_PASSWORD` | Redis password (if using REDIS_HOST) |
 | `OPENROUTER_API_KEY` | Your OpenRouter API key |
 | `OPENROUTER_MODEL` | AI model (default: `openai/gpt-3.5-turbo`) |
-| `NEXT_PUBLIC_API_URL` | Public API URL for frontend |
+| `NEXT_PUBLIC_API_URL` | Public API URL for frontend (build-time) |
 
 ### Database
 

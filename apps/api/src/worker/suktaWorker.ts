@@ -7,12 +7,15 @@ import { eq } from "drizzle-orm";
 import { scrapeWebsite } from "./scraper";
 import { askAI } from "./ai";
 
-const connection = new IORedis({
-  host: process.env.REDIS_HOST || "localhost",
-  port: parseInt(process.env.REDIS_PORT || "6379"),
-  password: process.env.REDIS_PASSWORD || undefined,
-  maxRetriesPerRequest: null,
-});
+// Support both REDIS_URL and separate host/port/password
+const connection = process.env.REDIS_URL
+  ? new IORedis(process.env.REDIS_URL, { maxRetriesPerRequest: null })
+  : new IORedis({
+      host: process.env.REDIS_HOST || "localhost",
+      port: parseInt(process.env.REDIS_PORT || "6379"),
+      password: process.env.REDIS_PASSWORD || undefined,
+      maxRetriesPerRequest: null,
+    });
 
 // Worker for scraping websites
 const scrapeWorker = new Worker(
