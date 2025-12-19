@@ -43,4 +43,5 @@ WORKDIR /app/apps/api
 
 EXPOSE 4000
 
-CMD ["bun", "run", "src/index.ts"]
+# Run both API and worker together
+CMD ["bun", "run", "start.ts"]

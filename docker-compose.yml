@@ -8,7 +8,7 @@ services:
       - redis_data:/data
     restart: unless-stopped
 
-  # API Server
+  # API Server + Worker (combined)
   api:
     build:
       context: .
@@ -25,28 +25,11 @@ services:
       - redis
     restart: unless-stopped
 
-  # Background Worker
-  worker:
-    build:
-      context: .
-      dockerfile: apps/api/Dockerfile.worker
-    environment:
-      - DATABASE_URL=${DATABASE_URL}
-      - REDIS_HOST=redis
-      - REDIS_PORT=6379
-      - OPENROUTER_API_KEY=${OPENROUTER_API_KEY}
-      - OPENROUTER_MODEL=${OPENROUTER_MODEL:-openai/gpt-3.5-turbo}
-    depends_on:
-      - redis
-    restart: unless-stopped
-
   # Next.js Frontend
   web:
     build:
       context: .
       dockerfile: apps/web/Dockerfile
-      args:
-        - NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL:-http://localhost:4000}
     ports:
       - "3000:3000"
     environment:
