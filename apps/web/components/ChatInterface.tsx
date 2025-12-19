@@ -93,10 +93,11 @@ export function ChatInterface() {
     refetchInterval: (query) => {
       const data = query.state.data;
       if (data?.status === "completed" || data?.status === "failed") {
+        const messageStatus = data.status as "completed" | "failed";
         setMessages((prev) =>
           prev.map((msg) =>
             msg.questionId === pendingQuestionId
-              ? { ...msg, content: data.answer || "No answer", status: data.status }
+              ? { ...msg, content: data.answer || "No answer", status: messageStatus }
               : msg
           )
         );
@@ -262,6 +263,7 @@ export function ChatInterface() {
               )}
             </span>
             <button
+              type="button"
               onClick={resetChat}
               className="text-sm text-slate-400 hover:text-white transition-colors"
             >
