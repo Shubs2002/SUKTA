@@ -2,9 +2,15 @@
   "name": "@sukta/db",
   "private": true,
   "type": "module",
-  
   "scripts": {
     "generate": "drizzle-kit generate",
     "migrate": "bun --env-file=../../.env drizzle-kit migrate"
+  },
+  "dependencies": {
+    "drizzle-orm": "^0.44.2",
+    "pg": "^8.16.3"
+  },
+  "devDependencies": {
+    "drizzle-kit": "^0.31.4"
   }
 }

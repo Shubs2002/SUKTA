@@ -6,12 +6,7 @@ FROM base AS deps
 COPY package.json bun.lock ./
 COPY apps/api/package.json ./apps/api/
 COPY packages/db/package.json ./packages/db/
-RUN bun install --frozen-lockfile
-
-# Build stage
-FROM base AS builder
-COPY --from=deps /app/node_modules ./node_modules
-COPY . .
+RUN bun install
 
 # Production stage
 FROM base AS runner
@@ -36,10 +31,10 @@ RUN apt-get update && apt-get install -y \
     libcairo2 \
     && rm -rf /var/lib/apt/lists/*
 
-COPY --from=builder /app/node_modules ./node_modules
-COPY --from=builder /app/apps/api ./apps/api
-COPY --from=builder /app/packages ./packages
-COPY --from=builder /app/package.json ./
+COPY --from=deps /app/node_modules ./node_modules
+COPY apps/api ./apps/api
+COPY packages ./packages
+COPY package.json ./
 
 # Install Playwright browsers
 RUN bunx playwright install chromium
