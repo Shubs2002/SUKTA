@@ -20,13 +20,21 @@ interface ChatAreaProps {
   onMenuClick?: () => void;
 }
 
-// Railway API URL (production) or localhost (development)
-const API_URL =
-  process.env.NEXT_PUBLIC_API_URL
-    ? `${process.env.NEXT_PUBLIC_API_URL}/api`
-    : typeof window !== "undefined" && window.location.hostname !== "localhost"
-      ? "https://api-production-67bb.up.railway.app/api"
-      : "http://localhost:4000/api";
+// API URL - determined at runtime on client
+const getApiUrl = () => {
+  // Check build-time env var first
+  if (process.env.NEXT_PUBLIC_API_URL) {
+    return `${process.env.NEXT_PUBLIC_API_URL}/api`;
+  }
+  // Client-side: check hostname
+  if (typeof window !== "undefined") {
+    if (window.location.hostname === "localhost") {
+      return "http://localhost:4000/api";
+    }
+  }
+  // Production fallback
+  return "https://api-production-67bb.up.railway.app/api";
+};
 
 export function ChatArea({
   session,
@@ -37,7 +45,13 @@ export function ChatArea({
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
   const [pendingQuestionId, setPendingQuestionId] = useState<string | null>(null);
+  const [apiUrl, setApiUrl] = useState("https://api-production-67bb.up.railway.app/api");
   const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  // Set API URL on client mount
+  useEffect(() => {
+    setApiUrl(getApiUrl());
+  }, []);
 
   const scrollToBottom = useCallback(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -82,7 +96,7 @@ export function ChatArea({
 
     const interval = setInterval(async () => {
       try {
-        const res = await fetch(`${API_URL}/session/${session.id}`);
+        const res = await fetch(`${apiUrl}/session/${session.id}`);
         const data = await res.json();
 
         if (data.status === "ready" || data.status === "failed") {
@@ -110,7 +124,7 @@ export function ChatArea({
     }, 2000);
 
     return () => clearInterval(interval);
-  }, [session?.id, session?.status, onSessionUpdated]);
+  }, [session?.id, session?.status, onSessionUpdated, apiUrl]);
 
   // Poll question status using setInterval
   useEffect(() => {
@@ -119,7 +133,7 @@ export function ChatArea({
     const interval = setInterval(async () => {
       try {
         const res = await fetch(
-          `${API_URL}/session/${session.id}/question/${pendingQuestionId}`
+          `${apiUrl}/session/${session.id}/question/${pendingQuestionId}`
         );
         const data = await res.json();
 
@@ -140,12 +154,12 @@ export function ChatArea({
     }, 1500);
 
     return () => clearInterval(interval);
-  }, [pendingQuestionId, session?.id]);
+  }, [pendingQuestionId, session?.id, apiUrl]);
 
   // Create session
   const createSession = useMutation({
     mutationFn: async (url: string) => {
-      const res = await fetch(`${API_URL}/session`, {
+      const res = await fetch(`${apiUrl}/session`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ url }),
@@ -176,7 +190,7 @@ export function ChatArea({
   // Ask question
   const askQuestion = useMutation({
     mutationFn: async (question: string) => {
-      const res = await fetch(`${API_URL}/session/${session!.id}/question`, {
+      const res = await fetch(`${apiUrl}/session/${session!.id}/question`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ question }),
